@@ -1,0 +1,65 @@
+-- ลบ GUI เก่าออกก่อน (ถ้ามี) เพื่อไม่ให้มันซ้อนกัน
+local oldGui = game.CoreGui:FindFirstChild("SpeedHackMobile")
+if oldGui then oldGui:Destroy() end
+
+-- สร้าง GUI ใน CoreGui (เพื่อให้แสดงผลในตัวรัน)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SpeedHackMobile"
+ScreenGui.Parent = game:GetService("CoreGui")
+
+-- สร้างกรอบเมนู
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 200, 0, 150)
+Frame.Position = UDim2.new(0.5, -100, 0.2, 0) -- อยู่ตรงกลางค่อนบน
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.Active = true
+Frame.Draggable = true -- สำหรับคอม (ถ้ามือถือต้องใช้สคริปต์ลากแยก)
+Frame.Parent = ScreenGui
+
+-- หัวข้อ
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Text = "Speed Hub (0-200)"
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+Title.Parent = Frame
+
+-- ช่องใส่ความเร็ว
+local TextBox = Instance.new("TextBox")
+TextBox.Size = UDim2.new(0.8, 0, 0, 30)
+TextBox.Position = UDim2.new(0.1, 0, 0.35, 0)
+TextBox.PlaceholderText = "ใส่ความเร็ว..."
+TextBox.Text = "200"
+TextBox.BackgroundColor3 = Color3.new(1, 1, 1)
+TextBox.TextColor3 = Color3.new(0, 0, 0)
+TextBox.Parent = Frame
+
+-- ปุ่มตกลง
+local Button = Instance.new("TextButton")
+Button.Size = UDim2.new(0.8, 0, 0, 40)
+Button.Position = UDim2.new(0.1, 0, 0.65, 0)
+Button.Text = "ปรับความเร็ว"
+Button.BackgroundColor3 = Color3.fromRGB(0, 170, 100)
+Button.TextColor3 = Color3.new(1, 1, 1)
+Button.Parent = Frame
+
+-- ฟังก์ชันปรับความเร็ว
+Button.MouseButton1Click:Connect(function()
+    local targetSpeed = tonumber(TextBox.Text)
+    if targetSpeed then
+        local lp = game.Players.LocalPlayer
+        if lp and lp.Character and lp.Character:FindFirstChild("Humanoid") then
+            lp.Character.Humanoid.WalkSpeed = targetSpeed
+        end
+    end
+end)
+
+-- ระบบป้องกันเวลาตายแล้วความเร็วหาย
+game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
+    local hum = char:WaitForChild("Humanoid")
+    local targetSpeed = tonumber(TextBox.Text)
+    if targetSpeed then
+        wait(1) -- รอตัวละครเกิดแป๊บหนึ่ง
+        hum.WalkSpeed = targetSpeed
+    end
+end)
