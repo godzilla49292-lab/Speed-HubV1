@@ -1,0 +1,187 @@
+-- [[ AURAS HUB - THE ULTIMATE COMPLETION ]] --
+-- Features: Standalone UI | Master ESP | Sheriff Auto-Shoot | Kill Aura | Auto Get Gun | Farm
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Cleanup existing UI
+if game.CoreGui:FindFirstChild("AurasHub_Ultimate") then game.CoreGui.AurasHub_Ultimate:Destroy() end
+
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.Name = "AurasHub_Ultimate"
+
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 480, 0, 420) -- ปรับขนาดเพิ่มรองรับปุ่มใหม่
+Main.Position = UDim2.new(0.5, -240, 0.5, -210)
+Main.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main)
+local Stroke = Instance.new("UIStroke", Main)
+Stroke.Color = Color3.fromRGB(0, 150, 255)
+Stroke.Thickness = 2
+
+-- [ HIDE BUTTON ]
+local Hide = Instance.new("TextButton", ScreenGui)
+Hide.Size = UDim2.new(0, 45, 0, 45)
+Hide.Position = UDim2.new(0, 10, 0.5, -22)
+Hide.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+Hide.Text = "✨"; Hide.TextColor3 = Color3.fromRGB(0, 150, 255); Hide.TextSize = 20
+Instance.new("UICorner", Hide).CornerRadius = UDim.new(1, 0)
+Hide.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
+
+-- [ SIDEBAR ]
+local Sidebar = Instance.new("Frame", Main)
+Sidebar.Size = UDim2.new(0, 130, 1, 0); Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+Instance.new("UICorner", Sidebar)
+local Title = Instance.new("TextLabel", Sidebar)
+Title.Size = UDim2.new(1, 0, 0, 60); Title.Text = "AURAS HUB"; Title.TextColor3 = Color3.fromRGB(0, 150, 255); Title.Font = Enum.Font.GothamBold; Title.TextSize = 18; Title.BackgroundTransparency = 1
+
+-- [ CONTENT AREA ]
+local Content = Instance.new("ScrollingFrame", Main)
+Content.Position = UDim2.new(0, 140, 0, 15); Content.Size = UDim2.new(1, -155, 1, -30); Content.BackgroundTransparency = 1; Content.ScrollBarThickness = 2; Content.CanvasSize = UDim2.new(0, 0, 2.8, 0)
+local Layout = Instance.new("UIListLayout", Content); Layout.Padding = UDim.new(0, 6)
+
+local function AddToggle(text, callback)
+    local btn = Instance.new("TextButton", Content)
+    btn.Size = UDim2.new(0.95, 0, 0, 35); btn.BackgroundColor3 = Color3.fromRGB(25, 25, 35); btn.Text = "  " .. text .. ": OFF"; btn.TextColor3 = Color3.fromRGB(200, 200, 200); btn.TextXAlignment = Enum.TextXAlignment.Left; btn.Font = Enum.Font.GothamSemibold; btn.TextSize = 12
+    Instance.new("UICorner", btn)
+    local active = false
+    btn.MouseButton1Click:Connect(function()
+        active = not active
+        btn.Text = "  " .. text .. ": " .. (active and "ON" or "OFF")
+        btn.TextColor3 = active and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(200, 200, 200)
+        callback(active)
+    end)
+end
+
+-- --- [ ULTIMATE FEATURES ] ---
+
+-- 1. Hero: Auto Get Gun (NEW)
+local AutoGetGun = false
+AddToggle("Auto Get Dropped Gun", function(v) AutoGetGun = v end)
+task.spawn(function()
+    while task.wait(0.1) do
+        if AutoGetGun and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            -- MM2 ปืนที่ตกพื้นมักจะอยู่ใน Workspace และมีชื่อว่า "GunDrop"
+            local gunDrop = workspace:FindFirstChild("GunDrop") or workspace:FindFirstChild("Gun")
+            if gunDrop and gunDrop:IsA("BasePart") then
+                gunDrop.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+            end
+        end
+    end
+end)
+
+-- 2. Sheriff/Hero: Auto Aim & Shoot
+local AutoSheriff = false
+AddToggle("Sheriff/Hero Auto-Shoot", function(v) AutoSheriff = v end)
+task.spawn(function()
+    while task.wait() do
+        if AutoSheriff and LocalPlayer.Character and (LocalPlayer.Character:FindFirstChild("Gun") or LocalPlayer.Character:FindFirstChild("Revolver")) then
+            for _, p in pairs(Players:GetPlayers()) do
+                if p.Character and (p.Backpack:FindFirstChild("Knife") or p.Character:FindFirstChild("Knife")) then
+                    local targetPos = p.Character.HumanoidRootPart.Position
+                    if (LocalPlayer.Character.HumanoidRootPart.Position - targetPos).Magnitude < 65 then
+                        workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, targetPos)
+                        mouse1click() 
+                        task.wait(0.1)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- 3. Master Role ESP
+local RoleESP = false
+AddToggle("Master Role ESP", function(v) RoleESP = v end)
+task.spawn(function()
+    while task.wait(0.5) do
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character then
+                local h = p.Character:FindFirstChild("AurasHighlight")
+                if RoleESP then
+                    if not h then h = Instance.new("Highlight", p.Character); h.Name = "AurasHighlight" end
+                    if p.Backpack:FindFirstChild("Knife") or p.Character:FindFirstChild("Knife") then h.FillColor = Color3.fromRGB(255, 0, 0)
+                    elseif p.Backpack:FindFirstChild("Gun") or p.Character:FindFirstChild("Gun") then h.FillColor = Color3.fromRGB(0, 150, 255)
+                    else h.FillColor = Color3.fromRGB(0, 255, 100) end
+                elseif h then h:Destroy() end
+            end
+        end
+    end
+end)
+
+-- 4. Murderer: Kill Aura
+local KillAura = false
+AddToggle("Murderer Kill Aura", function(v) KillAura = v end)
+task.spawn(function()
+    while task.wait(0.1) do
+        if KillAura and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Knife") then
+            for _, v in pairs(Players:GetPlayers()) do
+                if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                    if (LocalPlayer.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude < 15 then
+                        firetouchinterest(v.Character.HumanoidRootPart, LocalPlayer.Character.Knife.Handle, 0)
+                        firetouchinterest(v.Character.HumanoidRootPart, LocalPlayer.Character.Knife.Handle, 1)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- 5. Movement (Speed / Fly / Jump)
+local SpeedOn = false
+AddToggle("Super Speed", function(v) SpeedOn = v end)
+RunService.Stepped:Connect(function() if SpeedOn and LocalPlayer.Character then LocalPlayer.Character.Humanoid.WalkSpeed = 60 end end)
+
+local Flying = false
+AddToggle("Fly Mode", function(v)
+    Flying = v
+    local bv = Instance.new("BodyVelocity")
+    if Flying then
+        bv.Parent = LocalPlayer.Character.HumanoidRootPart; bv.MaxForce = Vector3.new(1e5, 1e5, 1e5); bv.Velocity = Vector3.new(0,0,0)
+        task.spawn(function()
+            while Flying do
+                bv.Velocity = LocalPlayer.Character.Humanoid.MoveDirection * 50 + Vector3.new(0, 1, 0)
+                task.wait()
+            end
+            bv:Destroy()
+        end)
+    end
+end)
+
+-- 6. Farming & Utility (Auto Coin / Noclip / Xray)
+local AutoCoin = false
+AddToggle("Auto Coin Farm", function(v) AutoCoin = v end)
+task.spawn(function()
+    while task.wait(0.1) do
+        if AutoCoin and LocalPlayer.Character then
+            for _, c in pairs(workspace:GetDescendants()) do
+                if c.Name == "Coin_Y" or c.Name == "Coin" then c.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame end
+            end
+        end
+    end
+end)
+
+local Noclip = false
+AddToggle("Ghost Noclip", function(v) Noclip = v end)
+RunService.Stepped:Connect(function() if Noclip and LocalPlayer.Character then for _, p in pairs(LocalPlayer.Character:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = false end end end end)
+
+local Xray = false
+AddToggle("X-Ray Map", function(v)
+    Xray = v
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and not obj.Parent:FindFirstChild("Humanoid") then obj.LocalTransparencyModifier = Xray and 0.5 or 0 end
+    end
+end)
+
+-- [ EXIT ]
+local Exit = Instance.new("TextButton", Sidebar)
+Exit.Position = UDim2.new(0.1, 0, 0.88, 0); Exit.Size = UDim2.new(0.8, 0, 0, 30)
+Exit.BackgroundColor3 = Color3.fromRGB(80, 20, 20); Exit.Text = "UNLOAD"; Exit.TextColor3 = Color3.fromRGB(255, 100, 100)
+Instance.new("UICorner", Exit)
+Exit.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
+
+game.StarterGui:SetCore("SendNotification", {Title = "AURAS HUB MASTER", Text = "Ultimate Completion Loaded!", Duration = 5})
